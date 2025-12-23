@@ -1,23 +1,24 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/contexts/auth-context';
+import { signInWithGoogle, signUpWithEmail } from '@/services/authService';
+import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Image } from 'expo-image';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StatusBar,
   StyleSheet,
-  View,
   Text,
   TextInput,
   TouchableOpacity,
-  StatusBar,
-  SafeAreaView,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-  ActivityIndicator,
-  ScrollView,
+  View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { signUpWithEmail, signInWithGoogle } from '@/services/authService';
-import { useAuth } from '@/contexts/auth-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SignUpScreen() {
   const router = useRouter();
@@ -175,9 +176,11 @@ export default function SignUpScreen() {
           <View style={styles.content}>
             {/* Logo */}
             <View style={styles.logoContainer}>
-              <View style={styles.logo}>
-                <Text style={styles.logoText}>YCA</Text>
-              </View>
+              <Image
+                source={require('@/assets/images/logo.png')}
+                style={styles.logo}
+                contentFit="contain"
+              />
             </View>
 
             {/* Title */}
@@ -204,7 +207,8 @@ export default function SignUpScreen() {
                 onFocus={() => setFocusedInput('name')}
                 onBlur={() => setFocusedInput(null)}
                 autoCapitalize="words"
-                autoComplete="name"
+                autoComplete="off"
+                textContentType="none"
               />
             </View>
 
@@ -229,7 +233,8 @@ export default function SignUpScreen() {
                 onBlur={() => setFocusedInput(null)}
                 autoCapitalize="none"
                 keyboardType="email-address"
-                autoComplete="email"
+                autoComplete="off"
+                textContentType="none"
               />
             </View>
 
@@ -254,7 +259,8 @@ export default function SignUpScreen() {
                 onBlur={() => setFocusedInput(null)}
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
-                autoComplete="password-new"
+                autoComplete="off"
+                textContentType="none"
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
@@ -288,7 +294,8 @@ export default function SignUpScreen() {
                 onBlur={() => setFocusedInput(null)}
                 secureTextEntry={!showConfirmPassword}
                 autoCapitalize="none"
-                autoComplete="password-new"
+                autoComplete="off"
+                textContentType="none"
               />
               <TouchableOpacity
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -355,6 +362,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F7F5F2',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   keyboardView: {
     flex: 1,
   },
@@ -375,15 +387,6 @@ const styles = StyleSheet.create({
   logo: {
     width: 80,
     height: 80,
-    backgroundColor: '#FF6B35',
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoText: {
-    color: '#FFFFFF',
-    fontSize: 32,
-    fontWeight: 'bold',
   },
   title: {
     fontSize: 32,

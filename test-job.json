@@ -1,0 +1,18 @@
+{
+  "source": "startup",
+  "title": "Software Engineering Intern - Test Job",
+  "company": "Test Startup Inc",
+  "location": "San Francisco, CA",
+  "remote": false,
+  "sponsors_visa": false,
+  "job_type": "Internship",
+  "description": "This is a test job to verify push notifications are working. If you see this notification, everything is set up correctly!",
+  "requirements": "Computer Science or related field",
+  "salary": "$50,000 - $60,000",
+  "url": "https://example.com/apply",
+  "posted_date": "2025-12-23",
+  "via": "test",
+  "benefits": [],
+  "responsibilities": [],
+  "thumbnail": ""
+}

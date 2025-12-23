@@ -16,6 +16,23 @@ const getUserId = async (): Promise<string> => {
 export const saveJob = async (jobId: string, notes?: string): Promise<string> => {
   try {
     const userId = await getUserId();
+    
+    // Check if job is already saved to prevent duplicates
+    const isAlreadySaved = await isJobSaved(jobId);
+    if (isAlreadySaved) {
+      console.log('Job already saved:', jobId);
+      // Return existing saved job ID (we need to find it)
+      const q = query(
+        collection(db, 'saved_jobs'),
+        where('userId', '==', userId),
+        where('jobId', '==', jobId)
+      );
+      const querySnapshot = await getDocs(q);
+      if (!querySnapshot.empty) {
+        return querySnapshot.docs[0].id;
+      }
+    }
+    
     const savedJobRef = await addDoc(collection(db, 'saved_jobs'), {
       userId,
       jobId,
@@ -25,6 +42,26 @@ export const saveJob = async (jobId: string, notes?: string): Promise<string> =>
     return savedJobRef.id;
   } catch (error: any) {
     console.error('Error saving job:', error);
+    
+    // If it's a duplicate error, that's okay - job is already saved
+    if (error.code === 'permission-denied' || error.message?.includes('already exists')) {
+      console.log('Job may already be saved, continuing...');
+      // Try to get the existing saved job ID
+      try {
+        const userId = await getUserId();
+        const q = query(
+          collection(db, 'saved_jobs'),
+          where('userId', '==', userId),
+          where('jobId', '==', jobId)
+        );
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          return querySnapshot.docs[0].id;
+        }
+      } catch (e) {
+        // Ignore this error
+      }
+    }
     
     // Hide all Firebase error details from users
     const genericError = new Error('Unable to save job at this time. Please try again later.');

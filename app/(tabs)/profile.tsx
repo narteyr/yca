@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { getUser, updateUserPreferences, getUserStats } from '@/services/userService';
+import { enablePushNotifications, disablePushNotifications } from '@/services/notificationService';
 import { useAuth } from '@/contexts/auth-context';
 import { User } from '@/types/user';
 import { Fonts } from '@/constants/theme';
@@ -60,6 +61,38 @@ export default function ProfileScreen() {
     } catch (error) {
       console.error('Error updating preference:', error);
       // Don't show error to user, just log it
+    }
+  };
+
+  const handleNotificationToggle = async (value: boolean) => {
+    if (!user || !authUser) return;
+
+    try {
+      if (value) {
+        // Enable notifications
+        const success = await enablePushNotifications(authUser.uid);
+        if (!success) {
+          Alert.alert(
+            'Permission Required',
+            'Please enable notifications in your device settings to receive job alerts.',
+            [{ text: 'OK' }]
+          );
+          return;
+        }
+      } else {
+        // Disable notifications
+        await disablePushNotifications(authUser.uid);
+      }
+
+      // Update local state and Firestore
+      await handlePreferenceChange('notificationsEnabled', value);
+    } catch (error) {
+      console.error('Error toggling notifications:', error);
+      Alert.alert(
+        'Error',
+        'Failed to update notification settings. Please try again.',
+        [{ text: 'OK' }]
+      );
     }
   };
 
@@ -375,11 +408,14 @@ export default function ProfileScreen() {
           <View style={styles.settingItem}>
             <View style={styles.settingItemContent}>
               <Ionicons name="notifications-outline" size={24} color="#000000" />
-              <Text style={styles.settingLabel}>Notifications</Text>
+              <View style={styles.settingTextContainer}>
+                <Text style={styles.settingLabel}>Push Notifications</Text>
+                <Text style={styles.settingDescription}>Get notified of new startup jobs matching your preferences</Text>
+              </View>
             </View>
             <Switch
               value={user?.preferences?.notificationsEnabled !== false} // Default to true
-              onValueChange={(value) => handlePreferenceChange('notificationsEnabled', value)}
+              onValueChange={handleNotificationToggle}
               trackColor={{ false: '#E0E0E0', true: '#FF6B35' }}
               thumbColor="#FFFFFF"
             />
@@ -597,10 +633,19 @@ const styles = StyleSheet.create({
     gap: 12,
     flex: 1,
   },
+  settingTextContainer: {
+    flex: 1,
+  },
   settingLabel: {
     fontSize: 16,
-    fontFamily: Fonts.regular,
+    fontFamily: Fonts.semiBold,
     color: '#000000',
+    marginBottom: 2,
+  },
+  settingDescription: {
+    fontSize: 12,
+    fontFamily: Fonts.regular,
+    color: '#666666',
   },
   signOutButton: {
     flexDirection: 'row',

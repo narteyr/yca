@@ -1,15 +1,15 @@
-import { StyleSheet, View, Text, TouchableOpacity, StatusBar, ScrollView, FlatList, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'expo-router';
-import { fetchJobs, fetchJobsWithFilters } from '@/services/jobService';
-import { useAuth } from '@/contexts/auth-context';
-import { Job } from '@/types/job';
 import { Fonts } from '@/constants/theme';
-import { useMatchScore } from '@/hooks/use-match-score';
+import { useAuth } from '@/contexts/auth-context';
+import { fetchJobs, fetchJobsWithFilters } from '@/services/jobService';
 import { getUser } from '@/services/userService';
+import { Job } from '@/types/job';
 import { UserPreferences } from '@/types/user';
+import { calculateMatchScore } from '@/utils/matchScore';
+import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface QuickFilter {
   id: string;
@@ -74,8 +74,8 @@ export default function HomeScreen() {
       // Apply high match filter if active
       if (activeFilters.find(f => f.id === 'highMatch')) {
         filteredJobs = filteredJobs.filter(job => {
-          // Calculate match score for filtering
-          const score = calculateQuickMatchScore(job, preferences);
+          // Calculate match score for filtering using the same logic as other screens
+          const score = calculateMatchScore(job, preferences);
           return score >= 80;
         });
       }
@@ -94,45 +94,6 @@ export default function HomeScreen() {
     );
   };
 
-  const calculateQuickMatchScore = (job: Job, prefs?: UserPreferences): number => {
-    let score = 80; // Base score
-    
-    if (!prefs) return score;
-    
-    // Remote preference
-    if (prefs.remoteOnly && job.remote) {
-      score += 5;
-    } else if (prefs.remoteOnly && !job.remote) {
-      score -= 10;
-    }
-    
-    // Visa sponsorship
-    if (prefs.visaSponsorshipRequired && job.sponsors_visa) {
-      score += 5;
-    } else if (prefs.visaSponsorshipRequired && !job.sponsors_visa) {
-      score -= 10;
-    }
-    
-    // Location match
-    if (prefs.preferredLocations && prefs.preferredLocations.length > 0) {
-      const jobLocation = job.location?.toLowerCase() || '';
-      const matchesLocation = prefs.preferredLocations.some(loc => 
-        jobLocation.includes(loc.toLowerCase())
-      );
-      if (matchesLocation) score += 5;
-    }
-    
-    // Skills match
-    if (prefs.skills && prefs.skills.length > 0 && job.requirements) {
-      const jobReq = job.requirements.toLowerCase();
-      const matchingSkills = prefs.skills.filter(skill => 
-        jobReq.includes(skill.toLowerCase())
-      );
-      if (matchingSkills.length > 0) score += matchingSkills.length * 2;
-    }
-    
-    return Math.min(100, Math.max(0, score));
-  };
 
   const getMatchInsights = (job: Job, prefs?: UserPreferences): string[] => {
     const insights: string[] = [];
@@ -175,7 +136,7 @@ export default function HomeScreen() {
   };
 
   const renderJobCard = ({ item }: { item: Job }) => {
-    const matchScore = calculateQuickMatchScore(item, preferences);
+    const matchScore = calculateMatchScore(item, preferences);
     const insights = getMatchInsights(item, preferences);
     
     return (
@@ -234,34 +195,6 @@ export default function HomeScreen() {
             <Text style={styles.discoverButtonText}>Discover</Text>
           </TouchableOpacity>
         </View>
-
-        {/* Quick Filter Chips */}
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterChipsContainer}>
-          {quickFilters.map((filter) => (
-            <TouchableOpacity
-              key={filter.id}
-              style={[
-                styles.filterChip,
-                filter.active && styles.filterChipActive
-              ]}
-              onPress={() => toggleFilter(filter.id)}>
-              <Ionicons 
-                name={filter.icon as any} 
-                size={16} 
-                color={filter.active ? '#FFFFFF' : '#666666'} 
-              />
-              <Text style={[
-                styles.filterChipText,
-                filter.active && styles.filterChipTextActive
-              ]}>
-                {filter.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
 
         {/* Jobs List */}
         {loading ? (
@@ -439,9 +372,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: Fonts.bold,
     color: '#000000',
-  },
-  matchBadgeHigh: {
-    backgroundColor: '#FF6B35',
   },
   matchScoreHigh: {
     color: '#FFFFFF',

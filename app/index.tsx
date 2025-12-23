@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StatusBar, StyleSheet, Text, View } from 'react-native';
+import { Image } from 'expo-image';
 
 export default function LaunchScreen() {
   const router = useRouter();
@@ -31,9 +32,11 @@ export default function LaunchScreen() {
       
       {/* Logo */}
       <View style={styles.logoContainer}>
-        <View style={styles.logo}>
-          <Text style={styles.logoText}>YCA</Text>
-        </View>
+        <Image
+          source={require('@/assets/images/logo.png')}
+          style={styles.logo}
+          contentFit="contain"
+        />
       </View>
 
       {/* Title */}
@@ -70,15 +73,6 @@ const styles = StyleSheet.create({
   logo: {
     width: 80,
     height: 80,
-    backgroundColor: '#FF6B35',
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoText: {
-    color: '#FFFFFF',
-    fontSize: 32,
-    fontWeight: 'bold',
   },
   title: {
     fontSize: 32,

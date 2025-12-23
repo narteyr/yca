@@ -1,6 +1,8 @@
 import { Fonts } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 import { updateUserPreferences } from '@/services/userService';
+import { enablePushNotifications } from '@/services/notificationService';
+import { UserPreferences } from '@/types/user';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as DocumentPicker from 'expo-document-picker';
@@ -62,16 +64,37 @@ export default function OnboardingScreen() {
       // Save onboarding data
       if (user) {
         try {
-          await updateUserPreferences({
-            graduationYear: data.graduationYear,
-            major: data.major,
-            studentStatus: data.studentStatus,
-            preferredLocations: data.preferredLocations,
-            experienceLevel: data.experienceLevel,
-            skills: data.skills,
-            jobTypes: data.internshipType,
-            otherRelevance: data.otherRelevance,
-          });
+          // Build preferences object, only including defined values
+          const preferencesToSave: Partial<UserPreferences> = {};
+          if (data.graduationYear !== undefined) preferencesToSave.graduationYear = data.graduationYear;
+          if (data.major !== undefined) preferencesToSave.major = data.major;
+          if (data.studentStatus !== undefined) preferencesToSave.studentStatus = data.studentStatus;
+          if (data.preferredLocations !== undefined) preferencesToSave.preferredLocations = data.preferredLocations;
+          if (data.experienceLevel !== undefined) preferencesToSave.experienceLevel = data.experienceLevel;
+          if (data.skills !== undefined) preferencesToSave.skills = data.skills;
+          if (data.internshipType !== undefined) preferencesToSave.jobTypes = data.internshipType;
+          if (data.otherRelevance !== undefined) preferencesToSave.otherRelevance = data.otherRelevance;
+
+          await updateUserPreferences(preferencesToSave);
+
+          // Automatically register for push notifications for new users
+          console.log('Registering push notifications for new user...');
+          try {
+            const notificationSuccess = await enablePushNotifications(user.uid);
+            if (notificationSuccess) {
+              console.log('✅ Push notifications registered successfully');
+              // Update preferences to mark notifications as enabled
+              await updateUserPreferences({ notificationsEnabled: true });
+            } else {
+              console.log('❌ User denied notification permission');
+              // Explicitly set notifications as disabled if permission denied
+              await updateUserPreferences({ notificationsEnabled: false });
+            }
+          } catch (notifError) {
+            console.error('Error registering push notifications:', notifError);
+            // If notification registration fails, set as disabled to avoid confusion
+            await updateUserPreferences({ notificationsEnabled: false });
+          }
 
           // Mark onboarding as complete
           const AsyncStorage = (await import('@react-native-async-storage/async-storage')).default;

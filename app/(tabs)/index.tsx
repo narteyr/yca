@@ -4,7 +4,8 @@ import { Fonts } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
 import { useFilters } from '@/hooks/use-filters';
 import { fetchJobs, fetchJobsWithFilters } from '@/services/jobService';
-import { saveJob } from '@/services/savedJobsService';
+import { getSavedJobIds, saveJob } from '@/services/savedJobsService';
+import { getSeenJobIds, markJobAsSeen } from '@/services/swipedJobsService';
 import { Job } from '@/types/job';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -22,11 +23,44 @@ export default function DiscoverScreen() {
   const [indexError, setIndexError] = useState<boolean>(false);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
   const [lastVisible, setLastVisible] = useState<any>(null);
+  const [seenJobIds, setSeenJobIds] = useState<Set<string>>(new Set());
+  const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set());
+  const [allJobsExhausted, setAllJobsExhausted] = useState(false);
   const { filters, isFilterActive, updateFilters, clearFilters } = useFilters();
 
   useEffect(() => {
+    loadSeenJobs();
+    loadSavedJobs();
     loadJobs();
   }, []);
+
+  // Reload saved jobs when user changes
+  useEffect(() => {
+    loadSavedJobs();
+  }, [user]);
+
+  const loadSeenJobs = async () => {
+    try {
+      const seen = await getSeenJobIds();
+      setSeenJobIds(new Set(seen));
+    } catch (error) {
+      console.error('Error loading seen jobs:', error);
+    }
+  };
+
+  const loadSavedJobs = async () => {
+    try {
+      if (user) {
+        const saved = await getSavedJobIds();
+        setSavedJobIds(new Set(saved));
+      } else {
+        setSavedJobIds(new Set());
+      }
+    } catch (error) {
+      console.error('Error loading saved jobs:', error);
+      setSavedJobIds(new Set());
+    }
+  };
 
   const loadJobs = async (reset: boolean = true) => {
     try {
@@ -34,7 +68,29 @@ export default function DiscoverScreen() {
         setLoading(true);
         setIndexError(false);
         setLastVisible(null);
+        setAllJobsExhausted(false);
+        // Reload seen jobs and saved jobs to get latest (in case of daily reset or new saves)
+        await loadSeenJobs();
+        await loadSavedJobs();
       }
+      
+      // Get current seen job IDs (fresh from storage/Firestore)
+      const currentSeenJobIds = await getSeenJobIds();
+      const seenSet = new Set(currentSeenJobIds);
+      // Update state to keep it in sync
+      setSeenJobIds(seenSet);
+      
+      // Get current saved job IDs (fresh from Firestore)
+      let currentSavedJobIds: string[] = [];
+      if (user) {
+        try {
+          currentSavedJobIds = await getSavedJobIds();
+          setSavedJobIds(new Set(currentSavedJobIds));
+        } catch (error) {
+          console.error('Error loading saved jobs for filtering:', error);
+        }
+      }
+      const savedSet = new Set(currentSavedJobIds);
       
       let result;
       if (isFilterActive) {
@@ -43,14 +99,44 @@ export default function DiscoverScreen() {
         result = await fetchJobs(reset ? undefined : lastVisible);
       }
       
+      // Filter out seen jobs AND saved jobs
+      const unseenJobs = result.jobs.filter(job => 
+        !seenSet.has(job.id) && !savedSet.has(job.id)
+      );
+      
       if (reset) {
-        setJobs(result.jobs);
-        if (result.jobs.length > 0) {
-          setCurrentJob(result.jobs[0]);
+        setJobs(unseenJobs);
+        if (unseenJobs.length > 0) {
+          setCurrentJob(unseenJobs[0]);
           setCurrentIndex(0);
+        } else {
+          setCurrentJob(null);
+          // Check if there are more jobs to load
+          if (result.lastVisible) {
+            // Try loading more
+            loadJobs(false);
+          } else {
+            setAllJobsExhausted(true);
+          }
         }
       } else {
-        setJobs(prev => [...prev, ...result.jobs]);
+        if (unseenJobs.length > 0) {
+          setJobs(prev => [...prev, ...unseenJobs]);
+          // Update current job if we don't have one
+          if (!currentJob && unseenJobs.length > 0) {
+            setCurrentJob(unseenJobs[0]);
+            setCurrentIndex(0);
+          }
+        } else if (result.lastVisible) {
+          // No unseen jobs in this batch, try loading more
+          setLastVisible(result.lastVisible);
+          loadJobs(false);
+        } else {
+          // No more jobs available
+          if (jobs.length === 0) {
+            setAllJobsExhausted(true);
+          }
+        }
       }
       setLastVisible(result.lastVisible);
     } catch (error: any) {
@@ -72,7 +158,13 @@ export default function DiscoverScreen() {
     loadJobs(true);
   };
 
-  const handleSwipeLeft = () => {
+  const handleSwipeLeft = async () => {
+    if (currentJob) {
+      // Mark job as seen
+      await markJobAsSeen(currentJob.id);
+      setSeenJobIds(prev => new Set([...prev, currentJob.id]));
+    }
+
     if (currentIndex < jobs.length - 1) {
       const nextIndex = currentIndex + 1;
       setCurrentIndex(nextIndex);
@@ -84,8 +176,9 @@ export default function DiscoverScreen() {
       if (lastVisible) {
         loadJobs(false);
       } else {
-        // No more jobs, reload
-        loadJobs(true);
+        // No more jobs available
+        setAllJobsExhausted(true);
+        setCurrentJob(null);
       }
     }
   };
@@ -107,6 +200,8 @@ export default function DiscoverScreen() {
       try {
         await saveJob(currentJob.id);
         console.log('Job saved:', currentJob.id);
+        // Add to saved jobs set so it's filtered out immediately
+        setSavedJobIds(prev => new Set([...prev, currentJob.id]));
       } catch (error: any) {
         console.error('Error saving job:', error);
         if (error.message === 'User not authenticated') {
@@ -115,9 +210,29 @@ export default function DiscoverScreen() {
           Alert.alert('Error', 'Unable to save job at this time. Please try again later.');
         }
       }
+      
+      // Mark job as seen
+      await markJobAsSeen(currentJob.id);
+      setSeenJobIds(prev => new Set([...prev, currentJob.id]));
     }
+    
     // Move to next job after saving
-    handleSwipeLeft();
+    if (currentIndex < jobs.length - 1) {
+      const nextIndex = currentIndex + 1;
+      setCurrentIndex(nextIndex);
+      if (jobs[nextIndex]) {
+        setCurrentJob(jobs[nextIndex]);
+      }
+    } else {
+      // Load more jobs when reaching the end
+      if (lastVisible) {
+        loadJobs(false);
+      } else {
+        // No more jobs available
+        setAllJobsExhausted(true);
+        setCurrentJob(null);
+      }
+    }
   };
 
 
@@ -178,7 +293,37 @@ export default function DiscoverScreen() {
     );
   }
 
-  if (!currentJob) {
+  if (allJobsExhausted || (!currentJob && !loading && jobs.length === 0)) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="dark-content" />
+        <View style={styles.emptyContainer}>
+          <View style={styles.emptyIconContainer}>
+            <Ionicons name="checkmark-circle-outline" size={80} color="#FF6B35" />
+          </View>
+          <Text style={styles.emptyTitle}>You've Seen All Available Jobs!</Text>
+          <Text style={styles.emptyText}>
+            Great job exploring! Come back tomorrow to discover new internship opportunities.
+          </Text>
+          <Text style={styles.emptySubtext}>
+            We refresh our job listings daily, so check back for fresh opportunities.
+          </Text>
+          <TouchableOpacity
+            style={styles.refreshButton}
+            onPress={() => {
+              setAllJobsExhausted(false);
+              loadJobs(true);
+            }}
+            activeOpacity={0.7}>
+            <Ionicons name="refresh" size={20} color="#FFFFFF" style={{ marginRight: 8 }} />
+            <Text style={styles.refreshButtonText}>Refresh Jobs</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  if (!currentJob && !loading) {
     return (
       <SafeAreaView style={styles.container}>
         <StatusBar barStyle="dark-content" />
@@ -362,6 +507,59 @@ const styles = StyleSheet.create({
     elevation: 6,
   },
   retryButtonText: {
+    fontSize: 16,
+    fontFamily: Fonts.semiBold,
+    color: '#FFFFFF',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  emptyIconContainer: {
+    marginBottom: 24,
+  },
+  emptyTitle: {
+    fontSize: 24,
+    fontFamily: Fonts.bold,
+    color: '#000000',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    fontFamily: Fonts.regular,
+    color: '#666666',
+    textAlign: 'center',
+    marginBottom: 8,
+    lineHeight: 24,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    fontFamily: Fonts.regular,
+    color: '#999999',
+    textAlign: 'center',
+    marginBottom: 32,
+    lineHeight: 20,
+  },
+  refreshButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF6B35',
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    shadowColor: '#FF6B35',
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  refreshButtonText: {
     fontSize: 16,
     fontFamily: Fonts.semiBold,
     color: '#FFFFFF',

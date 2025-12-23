@@ -1,22 +1,23 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '@/contexts/auth-context';
+import { signInWithEmail, signInWithGoogle } from '@/services/authService';
+import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Image } from 'expo-image';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useEffect, useState } from 'react';
 import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  StatusBar,
   StyleSheet,
-  View,
   Text,
   TextInput,
   TouchableOpacity,
-  StatusBar,
-  SafeAreaView,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-  ActivityIndicator,
+  View,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter, useLocalSearchParams, useFocusEffect } from 'expo-router';
-import { signInWithEmail, signInWithGoogle } from '@/services/authService';
-import { useAuth } from '@/contexts/auth-context';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function SignInScreen() {
   const router = useRouter();
@@ -155,9 +156,11 @@ export default function SignInScreen() {
         <View style={styles.content}>
           {/* Logo */}
           <View style={styles.logoContainer}>
-            <View style={styles.logo}>
-              <Text style={styles.logoText}>YCA</Text>
-            </View>
+            <Image
+              source={require('@/assets/images/logo.png')}
+              style={styles.logo}
+              contentFit="contain"
+            />
           </View>
 
           {/* Title */}
@@ -185,7 +188,8 @@ export default function SignInScreen() {
               onBlur={() => setFocusedInput(null)}
               autoCapitalize="none"
               keyboardType="email-address"
-              autoComplete="email"
+              autoComplete="off"
+              textContentType="none"
             />
           </View>
 
@@ -210,7 +214,8 @@ export default function SignInScreen() {
               onBlur={() => setFocusedInput(null)}
               secureTextEntry={!showPassword}
               autoCapitalize="none"
-              autoComplete="password"
+              autoComplete="off"
+              textContentType="none"
             />
             <TouchableOpacity
               onPress={() => setShowPassword(!showPassword)}
@@ -283,6 +288,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F7F5F2',
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   keyboardView: {
     flex: 1,
   },
@@ -299,15 +309,6 @@ const styles = StyleSheet.create({
   logo: {
     width: 80,
     height: 80,
-    backgroundColor: '#FF6B35',
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoText: {
-    color: '#FFFFFF',
-    fontSize: 32,
-    fontWeight: 'bold',
   },
   title: {
     fontSize: 32,

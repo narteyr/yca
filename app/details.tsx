@@ -1,3 +1,4 @@
+import { useMatchScore } from '@/hooks/use-match-score';
 import { createApplication, getApplicationByJobId } from '@/services/applicationService';
 import { fetchJobById } from '@/services/jobService';
 import { Job } from '@/types/job';
@@ -13,6 +14,7 @@ export default function DetailsScreen() {
   const [job, setJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState(true);
   const [isApplied, setIsApplied] = useState(false);
+  const matchScore = useMatchScore(job);
 
   useEffect(() => {
     if (id) {
@@ -170,7 +172,7 @@ export default function DetailsScreen() {
         {/* Match Badge */}
         <View style={styles.matchBadge}>
           <Ionicons name="sparkles" size={16} color="#9B59B6" />
-          <Text style={styles.matchText}>94% Match</Text>
+          <Text style={styles.matchText}>{matchScore}% Match</Text>
         </View>
 
         {/* Tags */}

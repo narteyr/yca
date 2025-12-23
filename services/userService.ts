@@ -1,6 +1,6 @@
-import { collection, doc, getDoc, setDoc, updateDoc, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/config/firebase';
 import { User, UserPreferences } from '@/types/user';
+import { collection, doc, getDoc, getDocs, query, setDoc, updateDoc, where } from 'firebase/firestore';
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -59,19 +59,39 @@ export const updateUserPreferences = async (preferences: Partial<UserPreferences
     const userRef = doc(db, 'users', userId);
     const userSnap = await getDoc(userRef);
     
+    // Remove undefined values - Firestore doesn't allow undefined
+    const cleanPreferences: any = {};
+    Object.keys(preferences).forEach(key => {
+      const value = preferences[key as keyof UserPreferences];
+      if (value !== undefined) {
+        cleanPreferences[key] = value;
+      }
+    });
+    
     if (userSnap.exists()) {
       const currentData = userSnap.data();
+      // Also clean current preferences to remove any undefined values
+      const cleanCurrentPreferences: any = {};
+      if (currentData.preferences) {
+        Object.keys(currentData.preferences).forEach(key => {
+          const value = currentData.preferences[key];
+          if (value !== undefined) {
+            cleanCurrentPreferences[key] = value;
+          }
+        });
+      }
+      
       await updateDoc(userRef, {
         preferences: {
-          ...currentData.preferences,
-          ...preferences,
+          ...cleanCurrentPreferences,
+          ...cleanPreferences,
         },
         updatedAt: new Date(),
       });
     } else {
       await setDoc(userRef, {
         id: userId,
-        preferences,
+        preferences: cleanPreferences,
         createdAt: new Date(),
         updatedAt: new Date(),
       });

@@ -32,7 +32,7 @@ export const calculateMatchScore = (job: Job, preferences?: UserPreferences): nu
   // Location preference match (up to 4 bonus points)
   if (preferences?.preferredLocations && preferences.preferredLocations.length > 0) {
     maxBonus += 4;
-    const jobLocation = job.location.toLowerCase();
+    const jobLocation = (job.location || '').toLowerCase();
     const hasMatch = preferences.preferredLocations.some(loc =>
       jobLocation.includes(loc.toLowerCase())
     );
@@ -44,12 +44,12 @@ export const calculateMatchScore = (job: Job, preferences?: UserPreferences): nu
   }
 
   // Salary range match (up to 2 bonus points)
-  if (preferences?.salaryRange) {
+  if (preferences?.preferredSalaryRange) {
     maxBonus += 2;
-    const salaryMatch = job.salary.match(/\$?(\d+)/);
+    const salaryMatch = job.salary?.match(/\$?(\d+)/);
     if (salaryMatch) {
       const salary = parseInt(salaryMatch[1]);
-      const { min, max } = preferences.salaryRange;
+      const { min, max } = preferences.preferredSalaryRange;
       if (min && max && salary >= min && salary <= max) {
         bonusPoints += 2;
       } else if (min && salary >= min) {
@@ -68,13 +68,13 @@ export const calculateMatchScore = (job: Job, preferences?: UserPreferences): nu
   if (preferences?.jobTypes && preferences.jobTypes.length > 0) {
     maxBonus += 3;
     // Check if job title or description matches preferred job types
-    const jobTitleLower = job.title.toLowerCase();
+    const jobTitleLower = (job.title || '').toLowerCase();
     const jobDescLower = (job.description || '').toLowerCase();
     const hasMatch = preferences.jobTypes.some(type => 
       jobTitleLower.includes(type.toLowerCase()) || 
       jobDescLower.includes(type.toLowerCase())
     );
-    if (hasMatch || preferences.jobTypes.includes(job.job_type)) {
+    if (hasMatch || (job.job_type && preferences.jobTypes.includes(job.job_type))) {
       bonusPoints += 3;
     } else {
       bonusPoints += 0.5; // Partial match
@@ -84,7 +84,7 @@ export const calculateMatchScore = (job: Job, preferences?: UserPreferences): nu
   // Skills match (up to 4 bonus points)
   if (preferences?.skills && preferences.skills.length > 0) {
     maxBonus += 4;
-    const jobText = `${job.title} ${job.description} ${job.requirements || ''}`.toLowerCase();
+    const jobText = `${job.title || ''} ${job.description || ''} ${job.requirements || ''}`.toLowerCase();
     const matchedSkills = preferences.skills.filter(skill =>
       jobText.includes(skill.toLowerCase())
     );
@@ -115,7 +115,7 @@ export const calculateMatchScore = (job: Job, preferences?: UserPreferences): nu
   // Other relevance match (up to 2 bonus points)
   if (preferences?.otherRelevance && preferences.otherRelevance.length > 0) {
     maxBonus += 2;
-    const jobText = `${job.title} ${job.description} ${job.company || ''}`.toLowerCase();
+    const jobText = `${job.title || ''} ${job.description || ''} ${job.company || ''}`.toLowerCase();
     const matchedRelevance = preferences.otherRelevance.filter(item => {
       const itemLower = item.toLowerCase();
       if (itemLower.includes('startup')) {

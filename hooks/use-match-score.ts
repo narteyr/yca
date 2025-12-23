@@ -1,12 +1,11 @@
-import { useState, useEffect } from 'react';
+import { getUser } from '@/services/userService';
 import { Job } from '@/types/job';
 import { UserPreferences } from '@/types/user';
 import { calculateMatchScore } from '@/utils/matchScore';
-import { getUser } from '@/services/userService';
+import { useEffect, useMemo, useState } from 'react';
 
 export const useMatchScore = (job: Job | null) => {
   const [preferences, setPreferences] = useState<UserPreferences | undefined>(undefined);
-  const [matchScore, setMatchScore] = useState<number>(80);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -23,15 +22,14 @@ export const useMatchScore = (job: Job | null) => {
     loadData();
   }, []);
 
-  useEffect(() => {
+  // Calculate match score using useMemo to ensure consistent calculation
+  const matchScore = useMemo(() => {
     if (!job || loading) {
-      setMatchScore(80);
-      return;
+      return 80; // Default score while loading
     }
 
     // Calculate match score based on user preferences from onboarding survey
-    const score = calculateMatchScore(job, preferences);
-    setMatchScore(score);
+    return calculateMatchScore(job, preferences);
   }, [job, preferences, loading]);
 
   return matchScore;

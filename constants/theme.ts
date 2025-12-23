@@ -27,18 +27,135 @@ export const Colors = {
   },
 };
 
-// Inter Tight font family (using Inter as base with tighter letter spacing)
+// Inter font family - high-legibility neutral sans serif
 export const Fonts = {
-  default: 'InterTight-Regular',
-  regular: 'InterTight-Regular',
-  medium: 'InterTight-Medium',
-  semiBold: 'InterTight-SemiBold',
-  bold: 'InterTight-Bold',
-  // Fallback to system fonts if Inter Tight is not loaded
+  regular: 'Inter-Regular',
+  medium: 'Inter-Medium',
+  semiBold: 'Inter-SemiBold',
+  bold: 'Inter-Bold',
+  extraBold: 'Inter-ExtraBold',
+  // Fallback to system fonts if Inter is not loaded
   fallback: Platform.select({
     ios: 'system-ui',
     android: 'sans-serif',
-    web: "'Inter Tight', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+    web: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
     default: 'sans-serif',
   }),
+};
+
+// Typography scale - comprehensive type system
+export const Typography = {
+  // Display - for large, impactful headlines
+  display: {
+    fontSize: 56,
+    lineHeight: 64,
+    letterSpacing: -1,
+    fontFamily: Fonts.extraBold,
+  },
+  // Headings
+  h1: {
+    fontSize: 40,
+    lineHeight: 48,
+    letterSpacing: -0.5,
+    fontFamily: Fonts.extraBold,
+  },
+  h2: {
+    fontSize: 32,
+    lineHeight: 40,
+    letterSpacing: -0.25,
+    fontFamily: Fonts.bold,
+  },
+  h3: {
+    fontSize: 24,
+    lineHeight: 32,
+    letterSpacing: 0,
+    fontFamily: Fonts.bold,
+  },
+  h4: {
+    fontSize: 20,
+    lineHeight: 28,
+    letterSpacing: 0,
+    fontFamily: Fonts.semiBold,
+  },
+  h5: {
+    fontSize: 18,
+    lineHeight: 24,
+    letterSpacing: 0,
+    fontFamily: Fonts.semiBold,
+  },
+  h6: {
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: 0,
+    fontFamily: Fonts.semiBold,
+  },
+  // Body text
+  body: {
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: 0,
+    fontFamily: Fonts.regular,
+  },
+  bodyMedium: {
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: 0,
+    fontFamily: Fonts.medium,
+  },
+  bodySemiBold: {
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: 0,
+    fontFamily: Fonts.semiBold,
+  },
+  bodySmall: {
+    fontSize: 14,
+    lineHeight: 20,
+    letterSpacing: 0,
+    fontFamily: Fonts.regular,
+  },
+  bodySmallMedium: {
+    fontSize: 14,
+    lineHeight: 20,
+    letterSpacing: 0,
+    fontFamily: Fonts.medium,
+  },
+  // UI elements
+  button: {
+    fontSize: 16,
+    lineHeight: 24,
+    letterSpacing: 0.25,
+    fontFamily: Fonts.semiBold,
+  },
+  buttonSmall: {
+    fontSize: 14,
+    lineHeight: 20,
+    letterSpacing: 0.25,
+    fontFamily: Fonts.semiBold,
+  },
+  caption: {
+    fontSize: 12,
+    lineHeight: 16,
+    letterSpacing: 0,
+    fontFamily: Fonts.regular,
+  },
+  captionMedium: {
+    fontSize: 12,
+    lineHeight: 16,
+    letterSpacing: 0,
+    fontFamily: Fonts.medium,
+  },
+  overline: {
+    fontSize: 12,
+    lineHeight: 16,
+    letterSpacing: 1,
+    fontFamily: Fonts.semiBold,
+    textTransform: 'uppercase' as const,
+  },
+  label: {
+    fontSize: 14,
+    lineHeight: 20,
+    letterSpacing: 0,
+    fontFamily: Fonts.medium,
+  },
 };

@@ -3,6 +3,7 @@ export interface User {
   email?: string;
   name?: string;
   preferences?: UserPreferences;
+  pushToken?: string; // Expo push notification token
   createdAt?: Date;
   updatedAt?: Date;
 }
