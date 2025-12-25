@@ -29,8 +29,13 @@ export function setupNotificationListeners() {
     // Handle different notification types
     if (data.type === 'new_job' && data.jobId) {
       console.log('Navigating to job details:', data.jobId);
-      // Navigate to the job details screen
-      router.push(`/details?id=${data.jobId}`);
+      // Navigate to tabs first to ensure proper navigation history,
+      // then push details on top so back button works correctly
+      router.push('/(tabs)');
+      // Small delay to ensure tabs navigation completes before pushing details
+      setTimeout(() => {
+        router.push(`/details?id=${data.jobId}`);
+      }, 100);
     }
   });
 

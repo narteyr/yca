@@ -208,7 +208,9 @@ export default function SignUpScreen() {
                 onBlur={() => setFocusedInput(null)}
                 autoCapitalize="words"
                 autoComplete="off"
+                autoCorrect={false}
                 textContentType="none"
+                importantForAutofill="no"
               />
             </View>
 
@@ -234,7 +236,9 @@ export default function SignUpScreen() {
                 autoCapitalize="none"
                 keyboardType="email-address"
                 autoComplete="off"
+                autoCorrect={false}
                 textContentType="none"
+                importantForAutofill="no"
               />
             </View>
 
@@ -260,7 +264,9 @@ export default function SignUpScreen() {
                 secureTextEntry={!showPassword}
                 autoCapitalize="none"
                 autoComplete="off"
+                autoCorrect={false}
                 textContentType="none"
+                importantForAutofill="no"
               />
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
@@ -295,7 +301,9 @@ export default function SignUpScreen() {
                 secureTextEntry={!showConfirmPassword}
                 autoCapitalize="none"
                 autoComplete="off"
+                autoCorrect={false}
                 textContentType="none"
+                importantForAutofill="no"
               />
               <TouchableOpacity
                 onPress={() => setShowConfirmPassword(!showConfirmPassword)}

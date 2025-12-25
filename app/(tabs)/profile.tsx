@@ -8,6 +8,7 @@ import { enablePushNotifications, disablePushNotifications } from '@/services/no
 import { useAuth } from '@/contexts/auth-context';
 import { User } from '@/types/user';
 import { Fonts } from '@/constants/theme';
+import LoadingScreen from '@/components/loading-screen';
 
 export default function ProfileScreen() {
   const router = useRouter();
@@ -122,25 +123,11 @@ export default function ProfileScreen() {
   };
 
   if (authLoading || loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" />
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <LoadingScreen message="Loading..." />;
   }
 
   if (!authUser) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" />
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Please sign in to view your profile</Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <LoadingScreen message="Please sign in to view your profile" />;
   }
 
   return (
@@ -437,15 +424,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F7F5F2',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 16,
-    color: '#666666',
   },
   contentWrapper: {
     flex: 1,

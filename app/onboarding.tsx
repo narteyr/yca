@@ -1,7 +1,7 @@
 import { Fonts } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
-import { updateUserPreferences } from '@/services/userService';
 import { enablePushNotifications } from '@/services/notificationService';
+import { updateUserPreferences } from '@/services/userService';
 import { UserPreferences } from '@/types/user';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';

@@ -1,11 +1,12 @@
-import React, { useRef } from 'react';
-import { StyleSheet, View, Text, Dimensions, TouchableOpacity, PanResponder, Animated, Image } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import * as Haptics from 'expo-haptics';
-import { Job } from '@/types/job';
-import { useMatchScore } from '@/hooks/use-match-score';
 import { Fonts } from '@/constants/theme';
+import { useMatchScore } from '@/hooks/use-match-score';
+import { Job } from '@/types/job';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
+import React, { useRef } from 'react';
+import { Animated, Dimensions, Image, PanResponder, StyleSheet, Text, View } from 'react-native';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 const SWIPE_THRESHOLD = 120;
@@ -209,7 +210,12 @@ export default function SwipeableCard({
     >
       <View style={styles.cardContent}>
         {/* Premium gradient overlay at top */}
-        <View style={styles.gradientOverlay} />
+        <LinearGradient
+          colors={['rgba(255, 107, 53, 0.08)', 'rgba(255, 107, 53, 0.02)', 'transparent']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.gradientOverlay}
+        />
         
         {/* Company Logo & Name */}
         <View style={styles.companyHeader}>
@@ -235,10 +241,14 @@ export default function SwipeableCard({
         </View>
 
         {/* Match Score */}
-        <View style={styles.matchBadge}>
+        <LinearGradient
+          colors={['rgba(155, 89, 182, 0.15)', 'rgba(155, 89, 182, 0.10)']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.matchBadge}>
           <Ionicons name="sparkles" size={14} color="#9B59B6" />
           <Text style={styles.matchText}>{matchScore}% Match</Text>
-        </View>
+        </LinearGradient>
 
         {/* Job Title */}
         <Text style={styles.jobTitle}>{job.title}</Text>
@@ -259,9 +269,13 @@ export default function SwipeableCard({
 
         {/* Company Description */}
         {job.description && (
-          <View style={styles.descriptionContainer}>
+          <LinearGradient
+            colors={['rgba(255, 107, 53, 0.06)', 'rgba(255, 107, 53, 0.02)']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.descriptionContainer}>
             <Text style={styles.descriptionText}>"{job.description}"</Text>
-          </View>
+          </LinearGradient>
         )}
 
         {/* Tags */}
@@ -318,19 +332,20 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     flex: 1,
-    borderRadius: 24,
+    borderRadius: 28,
     backgroundColor: '#FFFFFF',
-    padding: 28,
+    padding: 32,
+    // Multi-layer shadow system for depth
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 8,
+      height: 12,
     },
-    shadowOpacity: 0.15,
-    shadowRadius: 24,
-    elevation: 12,
+    shadowOpacity: 0.12,
+    shadowRadius: 32,
+    elevation: 16,
     borderWidth: 1,
-    borderColor: 'rgba(0, 0, 0, 0.04)',
+    borderColor: 'rgba(0, 0, 0, 0.06)',
     overflow: 'hidden',
     position: 'relative',
   },
@@ -339,33 +354,35 @@ const styles = StyleSheet.create({
     top: 0,
     left: 0,
     right: 0,
-    height: 120,
-    backgroundColor: 'rgba(255, 107, 53, 0.03)',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    height: 140,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
   },
   companyHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   companyLogo: {
-    width: 56,
-    height: 56,
-    borderRadius: 14,
+    width: 60,
+    height: 60,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 14,
+    marginRight: 16,
+    // Enhanced shadow for depth
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 4,
     },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
     overflow: 'hidden',
     backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 0, 0, 0.05)',
   },
   companyLogoImage: {
     width: '100%',
@@ -381,30 +398,38 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   companyName: {
-    fontSize: 22,
+    fontSize: 24,
     fontFamily: Fonts.bold,
     color: '#1A1A1A',
-    marginBottom: 4,
-    letterSpacing: -0.3,
+    marginBottom: 6,
+    letterSpacing: -0.4,
   },
   companyCategory: {
     fontSize: 13,
     color: '#888888',
     fontFamily: Fonts.medium,
-    letterSpacing: 0.2,
+    letterSpacing: 0.3,
   },
   matchBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    backgroundColor: 'rgba(155, 89, 182, 0.12)',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginBottom: 16,
-    marginTop: 4,
-    borderWidth: 1,
-    borderColor: 'rgba(155, 89, 182, 0.2)',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 22,
+    marginBottom: 20,
+    marginTop: 6,
+    borderWidth: 1.5,
+    borderColor: 'rgba(155, 89, 182, 0.25)',
+    // Enhanced shadow for depth
+    shadowColor: '#9B59B6',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    elevation: 3,
   },
   matchText: {
     fontSize: 13,
@@ -414,19 +439,19 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   jobTitle: {
-    fontSize: 28,
+    fontSize: 30,
     fontFamily: Fonts.bold,
     color: '#1A1A1A',
-    marginBottom: 20,
-    marginTop: 4,
-    lineHeight: 34,
-    letterSpacing: -0.5,
+    marginBottom: 24,
+    marginTop: 6,
+    lineHeight: 36,
+    letterSpacing: -0.6,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 14,
-    paddingVertical: 2,
+    marginBottom: 16,
+    paddingVertical: 4,
   },
   infoText: {
     fontSize: 15,
@@ -435,11 +460,20 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.medium,
   },
   descriptionContainer: {
-    marginTop: 24,
-    marginBottom: 24,
-    backgroundColor: 'rgba(255, 107, 53, 0.04)',
-    padding: 16,
-    borderRadius: 16,
+    marginTop: 28,
+    padding: 20,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 107, 53, 0.15)',
+    // Enhanced shadow for depth
+    shadowColor: '#FF6B35',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 2,
   },
   descriptionText: {
     fontSize: 15,
@@ -449,32 +483,33 @@ const styles = StyleSheet.create({
     fontFamily: Fonts.regular,
   },
   tagsContainer: {
+    padding: 10,
     flexDirection: 'row',
     flexWrap: 'wrap',
-    marginTop: 12,
-    gap: 10,
+    gap: 12,
   },
   tag: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 22,
     borderWidth: 1.5,
-    borderColor: 'rgba(0, 0, 0, 0.08)',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
+    borderColor: 'rgba(0, 0, 0, 0.1)',
+    backgroundColor: '#FFFFFF',
+    // Enhanced shadow for depth
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
-      height: 1,
+      height: 2,
     },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
   },
   tagText: {
-    fontSize: 12,
+    fontSize: 13,
     color: '#4A4A4A',
     fontFamily: Fonts.semiBold,
-    letterSpacing: 0.2,
+    letterSpacing: 0.3,
   },
   likeOverlay: {
     position: 'absolute',

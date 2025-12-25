@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { SavedJob } from '@/types/user';
 import { Job } from '@/types/job';
 import { Fonts } from '@/constants/theme';
+import LoadingScreen from '@/components/loading-screen';
 
 export default function SavedJobsScreen() {
   const router = useRouter();
@@ -114,26 +115,11 @@ export default function SavedJobsScreen() {
   );
 
   if (authLoading || loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6B35" />
-          <Text style={styles.loadingText}>Loading saved jobs...</Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <LoadingScreen message="Loading saved jobs..." />;
   }
 
   if (!user) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" />
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Please sign in to view saved jobs</Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <LoadingScreen message="Please sign in to view saved jobs" />;
   }
 
   if (indexError) {

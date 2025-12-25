@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import { getAnalytics, AnalyticsData } from '@/services/analyticsService';
+import LoadingScreen from '@/components/loading-screen';
 
 export default function AnalyticsScreen() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
@@ -25,15 +26,7 @@ export default function AnalyticsScreen() {
   };
 
   if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6B35" />
-          <Text style={styles.loadingText}>Loading analytics...</Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <LoadingScreen message="Loading analytics..." />;
   }
 
   if (!analytics) {
@@ -161,16 +154,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F7F5F2',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666666',
   },
   emptyContainer: {
     flex: 1,

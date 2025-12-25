@@ -1,4 +1,5 @@
 import FilterModal from '@/components/filter-modal';
+import LoadingScreen from '@/components/loading-screen';
 import SwipeableCard from '@/components/swipeable-card';
 import { Fonts } from '@/constants/theme';
 import { useAuth } from '@/contexts/auth-context';
@@ -10,7 +11,7 @@ import { Job } from '@/types/job';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function DiscoverScreen() {
@@ -26,6 +27,7 @@ export default function DiscoverScreen() {
   const [seenJobIds, setSeenJobIds] = useState<Set<string>>(new Set());
   const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set());
   const [allJobsExhausted, setAllJobsExhausted] = useState(false);
+  const [showSwipeHint, setShowSwipeHint] = useState(true);
   const { filters, isFilterActive, updateFilters, clearFilters } = useFilters();
 
   useEffect(() => {
@@ -38,6 +40,13 @@ export default function DiscoverScreen() {
   useEffect(() => {
     loadSavedJobs();
   }, [user]);
+
+  // Hide hint when user moves away from first card
+  useEffect(() => {
+    if (currentIndex > 0 && showSwipeHint) {
+      setShowSwipeHint(false);
+    }
+  }, [currentIndex]);
 
   const loadSeenJobs = async () => {
     try {
@@ -159,6 +168,11 @@ export default function DiscoverScreen() {
   };
 
   const handleSwipeLeft = async () => {
+    // Hide hint on first swipe
+    if (showSwipeHint) {
+      setShowSwipeHint(false);
+    }
+    
     if (currentJob) {
       // Mark job as seen
       await markJobAsSeen(currentJob.id);
@@ -184,6 +198,11 @@ export default function DiscoverScreen() {
   };
 
   const handleSwipeRight = async () => {
+    // Hide hint on first swipe
+    if (showSwipeHint) {
+      setShowSwipeHint(false);
+    }
+    
     if (!user) {
       Alert.alert(
         'Sign In Required',
@@ -256,15 +275,7 @@ export default function DiscoverScreen() {
   };
 
   if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6B35" />
-          <Text style={styles.loadingText}>Loading internships...</Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <LoadingScreen message="Loading internships..." />;
   }
 
   if (indexError) {
@@ -374,6 +385,22 @@ export default function DiscoverScreen() {
             isTop={index === 0}
           />
         )).reverse()}
+        
+        {/* Swipe Hint - Only show on first card */}
+        {showSwipeHint && currentIndex === 0 && currentJob && (
+          <View style={styles.swipeHintOverlay} pointerEvents="none">
+            <View style={styles.swipeHintContainer}>
+              <View style={styles.swipeHintItem}>
+                <Ionicons name="arrow-back" size={20} color="#FF6B35" />
+                <Text style={styles.swipeHintText}>Swipe left to decline</Text>
+              </View>
+              <View style={styles.swipeHintItem}>
+                <Ionicons name="arrow-forward" size={20} color="#FF6B35" />
+                <Text style={styles.swipeHintText}>Swipe right to save</Text>
+              </View>
+            </View>
+          </View>
+        )}
       </View>
 
 
@@ -448,23 +475,44 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 20,
   },
-  swipeHint: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+  swipeHintOverlay: {
+    position: 'absolute',
+    bottom: 20,
+    left: 0,
+    right: 0,
     alignItems: 'center',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    marginBottom: 20,
+    justifyContent: 'center',
+    pointerEvents: 'none',
+    zIndex: 1000,
+    elevation: 1000,
   },
-  swipeHintRow: {
+  swipeHintContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+    borderRadius: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    gap: 24,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.15,
+    shadowRadius: 8,
+    elevation: 5,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 107, 53, 0.2)',
+  },
+  swipeHintItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
   swipeHintText: {
     fontSize: 13,
-    fontFamily: Fonts.regular,
-    color: '#999999',
+    fontFamily: Fonts.medium,
+    color: '#666666',
   },
   errorContainer: {
     flex: 1,

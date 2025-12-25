@@ -7,6 +7,7 @@ import { getRecommendedJobs } from '@/services/recommendationService';
 import { useMatchScore } from '@/hooks/use-match-score';
 import { Job } from '@/types/job';
 import SwipeableCard from '@/components/swipeable-card';
+import LoadingScreen from '@/components/loading-screen';
 
 export default function RecommendationsScreen() {
   const router = useRouter();
@@ -44,15 +45,7 @@ export default function RecommendationsScreen() {
   };
 
   if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <StatusBar barStyle="dark-content" />
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6B35" />
-          <Text style={styles.loadingText}>Finding recommendations...</Text>
-        </View>
-      </SafeAreaView>
-    );
+    return <LoadingScreen message="Finding recommendations..." />;
   }
 
   if (jobs.length === 0) {
@@ -115,16 +108,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F7F5F2',
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#666666',
   },
   header: {
     paddingHorizontal: 20,
